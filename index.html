@@ -132,7 +132,7 @@
         async function loadBeers() {
             try {
                 const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/beers?select=*,breweries!brewery_id(name,city,department)&order=nom_biere`,
+                    `${SUPABASE_URL}/rest/v1/beers?select=*,breweries!brewery_id(nom_brasserie,ville,dept)&order=nom_biere`,
                     {
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -218,7 +218,7 @@
                 <div class="card-content">
                     <h3 class="card-title">${beer.nom_biere}</h3>
                     <div class="card-meta">
-                        <span>${beer.breweries?.name || 'Inconnue'}</span>
+                        <span>${beer.breweries?.nom_brasserie || 'Inconnue'}</span>
                         <span class="card-abv">${beer.alcool || '?'}%</span>
                     </div>
                 </div>
@@ -233,7 +233,7 @@
             if (searchQuery) {
                 result = result.filter(beer => 
                     beer.nom_biere.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    beer.breweries?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                    beer.breweries?.nom_brasserie?.toLowerCase().includes(searchQuery.toLowerCase())
                 );
             }
             
@@ -242,7 +242,7 @@
                     result = result.filter(beer => beer.bio === true);
                 } else if (currentFilter.startsWith('dept-')) {
                     const dept = currentFilter.split('-')[1];
-                    result = result.filter(beer => beer.breweries?.department === dept);
+                    result = result.filter(beer => beer.breweries?.dept === dept);
                 } else {
                     result = result.filter(beer => beer.style === currentFilter);
                 }
