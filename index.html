@@ -6,7 +6,6 @@
     <meta name="theme-color" content="#000000">
     <title>BeerApp - Découvrez la Craft Beer</title>
     <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -133,7 +132,7 @@
         async function loadBeers() {
             try {
                 const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/beers?select=*,breweries(name,city,department),styles(name,name_fr)&order=name`,
+                    `${SUPABASE_URL}/rest/v1/beers?select=*,breweries!brewery_id(name,city,department)&order=nom_biere`,
                     {
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -143,13 +142,17 @@
                     }
                 );
                 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
                 
                 allBeers = await response.json();
+                console.log('Bières chargées:', allBeers.length);
                 filteredBeers = allBeers;
                 renderBeers();
             } catch (error) {
-                console.error('Erreur:', error);
+                console.error('Erreur complète:', error);
                 document.getElementById('content').innerHTML = `
                     <div class="empty">
                         <div class="empty-emoji">⚠️</div>
@@ -199,10 +202,10 @@
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
             
             let badge = '';
-            if (beer.is_bio) {
+            if (beer.bio) {
                 badge = '<span class="badge badge-bio">BIO</span>';
-            } else if (beer.styles?.name) {
-                badge = `<span class="badge badge-style">${beer.styles.name}</span>`;
+            } else if (beer.style) {
+                badge = `<span class="badge badge-style">${beer.style}</span>`;
             }
             
             card.innerHTML = `
@@ -213,10 +216,10 @@
                     </svg>
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">${beer.name}</h3>
+                    <h3 class="card-title">${beer.nom_biere}</h3>
                     <div class="card-meta">
                         <span>${beer.breweries?.name || 'Inconnue'}</span>
-                        <span class="card-abv">${beer.abv}%</span>
+                        <span class="card-abv">${beer.alcool || '?'}%</span>
                     </div>
                 </div>
             `;
@@ -229,22 +232,19 @@
             
             if (searchQuery) {
                 result = result.filter(beer => 
-                    beer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    beer.nom_biere.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     beer.breweries?.name?.toLowerCase().includes(searchQuery.toLowerCase())
                 );
             }
             
             if (currentFilter !== 'all') {
                 if (currentFilter === 'bio') {
-                    result = result.filter(beer => beer.is_bio);
+                    result = result.filter(beer => beer.bio === true);
                 } else if (currentFilter.startsWith('dept-')) {
                     const dept = currentFilter.split('-')[1];
                     result = result.filter(beer => beer.breweries?.department === dept);
                 } else {
-                    result = result.filter(beer => 
-                        beer.styles?.name === currentFilter || 
-                        beer.styles?.name_fr === currentFilter
-                    );
+                    result = result.filter(beer => beer.style === currentFilter);
                 }
             }
             
