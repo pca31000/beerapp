@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>BeerApp - Découvrez la Craft Beer</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #fff; padding-bottom: 70px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 1rem 1.25rem; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.25rem; font-weight: 800; color: #fff; }
+        .logo span { color: #FFD700; }
+        .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #fff; cursor: pointer; }
+        .hero { background: linear-gradient(135deg, #000 0%, #1a1a1a 100%); color: #fff; text-align: center; padding: 2.5rem 1.25rem; }
+        .hero h2 { font-size: 1.875rem; font-weight: 800; margin-bottom: 1.5rem; line-height: 1.2; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; background: #FFD700; color: #000; font-weight: 700; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1.5rem; border: 2px solid #000; border-radius: 0.5rem; cursor: pointer; }
+        .search-section { padding: 1.25rem; }
+        .search-bar { display: flex; align-items: center; gap: 0.75rem; background: #F5F5F5; border: 2px solid transparent; border-radius: 0.5rem; padding: 0.75rem 1rem; }
+        .search-bar:focus-within { border-color: #FFD700; background: #fff; }
+        .search-bar input { flex: 1; border: none; background: none; font-size: 0.875rem; outline: none; font-family: inherit; }
+        .filters { display: flex; gap: 0.5rem; padding: 1rem 1.25rem; overflow-x: auto; border-bottom: 2px solid #000; }
+        .filters::-webkit-scrollbar { display: none; }
+        .chip { display: inline-flex; padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; border: 2px solid #000; border-radius: 9999px; background: #F5F5F5; cursor: pointer; white-space: nowrap; }
+        .chip.active { background: #FFD700; border-width: 3px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding: 1.25rem; }
+        .beer-card { background: #fff; border: 2px solid #000; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; }
+        .card-image { width: 100%; height: 140px; background: linear-gradient(135deg, #FF9F43 0%, #F39C12 100%); position: relative; display: flex; align-items: center; justify-content: center; }
+        .badge { position: absolute; top: 0.5rem; left: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border-radius: 9999px; border: 2px solid #000; }
+        .badge-bio { background: #10B981; color: #fff; }
+        .badge-style { background: #FFD700; color: #000; }
+        .card-content { padding: 0.75rem; }
+        .card-title { font-size: 0.875rem; font-weight: 800; margin-bottom: 0.25rem; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #525252; }
+        .card-abv { background: #000; color: #FFD700; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-weight: 700; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; background: #fff; border-top: 3px solid #000; padding: 0.5rem 0; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; border: none; background: none; color: #525252; cursor: pointer; padding: 0.5rem; }
+        .nav-item.active { color: #000; }
+        .nav-item.active svg { stroke: #FFD700; }
+        .nav-label { font-size: 0.75rem; font-weight: 700; }
+        .loading { text-align: center; padding: 3rem 1.25rem; }
+        .spinner { width: 48px; height: 48px; border: 4px solid #FFD700; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty { text-align: center; padding: 5rem 1.25rem; }
+        .empty-emoji { font-size: 3rem; margin-bottom: 1rem; }
+        .empty-title { font-weight: 700; font-size: 1.125rem; margin-bottom: 0.5rem; }
+        .empty-text { font-size: 0.875rem; color: #525252; }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <h1 class="logo">Beer<span>App</span></h1>
+        <button class="icon-btn">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+            </svg>
+        </button>
+    </header>
+
+    <section class="hero">
+        <h2>DÉCOUVREZ<br>LA CRAFT BEER</h2>
+        <button class="btn-primary">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Scanner une bière
+        </button>
+    </section>
+
+    <div class="search-section">
+        <div class="search-bar">
+            <svg width="20" height="20" fill="none" stroke="#525252" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="search" id="searchInput" placeholder="Rechercher une bière...">
+        </div>
+    </div>
+
+    <div class="filters" id="filters">
+        <button class="chip active" data-filter="all">Tous</button>
+        <button class="chip" data-filter="NEIPA">NEIPA</button>
+        <button class="chip" data-filter="IPA">IPA</button>
+        <button class="chip" data-filter="bio">BIO</button>
+        <button class="chip" data-filter="dept-31">Dept 31</button>
+    </div>
+
+    <div id="content">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="font-weight: 600; color: #525252;">Chargement des bières...</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            </svg>
+            <span class="nav-label">Découvrir</span>
+        </button>
+        <button class="nav-item">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span class="nav-label">Scan</span>
+        </button>
+        <button class="nav-item">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            <span class="nav-label">Culture</span>
+        </button>
+        <button class="nav-item">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+            </svg>
+            <span class="nav-label">Profil</span>
+        </button>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = 'https://yynrsotujqfphsgspogq.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5bnJzb3R1anFmcGhzZ3Nwb2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzOTEwNjEsImV4cCI6MjA3NDk2NzA2MX0.Rhw_t5bPu2VKZ1Pwx-vu4DcjueX9Ow0Vcwvuu293vRU';
+        
+        let allBeers = [];
+        let filteredBeers = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        
+        async function loadBeers() {
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/beers?select=*,breweries(name,city,department),styles(name,name_fr)&order=name`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                allBeers = await response.json();
+                filteredBeers = allBeers;
+                renderBeers();
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="empty">
+                        <div class="empty-emoji">⚠️</div>
+                        <p class="empty-title">Erreur de chargement</p>
+                        <p class="empty-text">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderBeers() {
+            const content = document.getElementById('content');
+            
+            if (filteredBeers.length === 0) {
+                content.innerHTML = `
+                    <div class="empty">
+                        <div class="empty-emoji">🍺</div>
+                        <p class="empty-title">Aucune bière trouvée</p>
+                        <p class="empty-text">${searchQuery ? 'Essayez une autre recherche' : 'Modifiez vos filtres'}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const grid = document.createElement('div');
+            grid.className = 'cards-grid';
+            
+            filteredBeers.forEach(beer => {
+                const card = createBeerCard(beer);
+                grid.appendChild(card);
+            });
+            
+            content.innerHTML = '';
+            content.appendChild(grid);
+        }
+        
+        function createBeerCard(beer) {
+            const card = document.createElement('article');
+            card.className = 'beer-card';
+            
+            const colors = [
+                'linear-gradient(135deg, #FF9F43 0%, #F39C12 100%)',
+                'linear-gradient(135deg, #F4D03F 0%, #F39C12 100%)',
+                'linear-gradient(135deg, #F8F9F9 0%, #ECF0F1 100%)',
+                'linear-gradient(135deg, #E67E22 0%, #D35400 100%)'
+            ];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            let badge = '';
+            if (beer.is_bio) {
+                badge = '<span class="badge badge-bio">BIO</span>';
+            } else if (beer.styles?.name) {
+                badge = `<span class="badge badge-style">${beer.styles.name}</span>`;
+            }
+            
+            card.innerHTML = `
+                <div class="card-image" style="background: ${randomColor}">
+                    ${badge}
+                    <svg width="48" height="48" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M3 3v16a2 2 0 0 0 2 2h16"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">${beer.name}</h3>
+                    <div class="card-meta">
+                        <span>${beer.breweries?.name || 'Inconnue'}</span>
+                        <span class="card-abv">${beer.abv}%</span>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function filterBeers() {
+            let result = allBeers;
+            
+            if (searchQuery) {
+                result = result.filter(beer => 
+                    beer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    beer.breweries?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+            
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'bio') {
+                    result = result.filter(beer => beer.is_bio);
+                } else if (currentFilter.startsWith('dept-')) {
+                    const dept = currentFilter.split('-')[1];
+                    result = result.filter(beer => beer.breweries?.department === dept);
+                } else {
+                    result = result.filter(beer => 
+                        beer.styles?.name === currentFilter || 
+                        beer.styles?.name_fr === currentFilter
+                    );
+                }
+            }
+            
+            filteredBeers = result;
+            renderBeers();
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            filterBeers();
+        });
+        
+        document.getElementById('filters').addEventListener('click', (e) => {
+            if (e.target.classList.contains('chip')) {
+                document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                filterBeers();
+            }
+        });
+        
+        loadBeers();
+    </script>
+</body>
+</html>
